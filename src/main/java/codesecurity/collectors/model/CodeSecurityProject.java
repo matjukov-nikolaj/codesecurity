@@ -1,4 +1,4 @@
-package codesecurity.model;
+package codesecurity.collectors.model;
 
 import com.capitalone.dashboard.model.CollectorItem;
 

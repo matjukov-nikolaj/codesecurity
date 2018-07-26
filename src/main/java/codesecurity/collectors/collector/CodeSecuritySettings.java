@@ -1,4 +1,4 @@
-package codesecurity.collector;
+package codesecurity.collectors.collector;
 
 public abstract class CodeSecuritySettings {
 

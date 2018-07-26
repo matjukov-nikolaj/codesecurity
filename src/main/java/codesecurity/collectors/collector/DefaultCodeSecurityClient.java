@@ -1,4 +1,4 @@
-package codesecurity.collector;
+package codesecurity.collectors.collector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -37,7 +37,7 @@ public abstract class DefaultCodeSecurityClient<T, P> {
 
     protected abstract void initializationFields();
 
-    protected abstract void parseCodeSecurityDocument(Document document);
+    protected abstract void parseCodeSecurityDocument(Document document) throws Exception;
 
     protected abstract void setInstanceUrlInProject(String instanceUrl);
 
@@ -76,7 +76,6 @@ public abstract class DefaultCodeSecurityClient<T, P> {
             Document document = db.parse(url.openStream());
             document.getDocumentElement().normalize();
             return document;
-
         } catch (Exception e) {
             LOG.error("Could not parse document from: " + instanceUrl, e);
         }

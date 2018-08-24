@@ -50,7 +50,7 @@ public abstract class DefaultCodeSecurityClient<T, P> {
     protected long getTimeStamp(String timestamp) {
         if (!timestamp.equals("")) {
             try {
-                Date date = getProjectDate(timestamp);
+                Date date = getDate(timestamp);
                 return date != null ? date.getTime() : 0;
             } catch (NullPointerException e) {
                 LOG.error(e);
@@ -59,7 +59,7 @@ public abstract class DefaultCodeSecurityClient<T, P> {
         return 0;
     }
 
-    protected Date getProjectDate(String timestamp) {
+    protected Date getDate(String timestamp) {
         try {
             return new SimpleDateFormat(getDateFormat(), Locale.ENGLISH).parse(timestamp);
         } catch (java.text.ParseException e) {
@@ -82,16 +82,15 @@ public abstract class DefaultCodeSecurityClient<T, P> {
         return null;
     }
 
-    protected String getProjectName(String name, String testingDate) {
-        Date date = getProjectDate(testingDate);
+    protected String getProjectDate(String testingDate) {
+        Date date = getDate(testingDate);
         if (date == null) {
-            return name;
+            return "";
         }
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
         calendar.add(Calendar.MONTH, 1);
-        return name + ":"
-                + calendar.get(Calendar.YEAR) + "-"
+        return  calendar.get(Calendar.YEAR) + "-"
                 + calendar.get(Calendar.MONTH) + "-"
                 + calendar.get(Calendar.DAY_OF_MONTH);
     }

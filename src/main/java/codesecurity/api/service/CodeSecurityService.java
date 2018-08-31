@@ -7,24 +7,28 @@ import com.capitalone.dashboard.model.DataResponse;
 import org.bson.types.ObjectId;
 import com.google.common.collect.Iterables;
 
-import java.util.List;
+import java.util.*;
+
 public abstract class CodeSecurityService<Type, Req>{
 
-    public abstract DataResponse<Iterable<Type>> search(Req request);
-
-    public abstract DataResponse<Iterable<Type>> searchType(Req request);
-
-    protected abstract ObjectId getRequestId(Req request);
-
-    protected abstract CollectorType getCollectorType();
-
-    protected abstract Component getComponent(ObjectId id);
-
-    protected DataResponse<Iterable<Type>> emptyResponse() {
+    public DataResponse<Iterable<Type>> emptyResponse() {
         return new DataResponse<>(null, System.currentTimeMillis());
     }
 
-    protected CollectorItem getCollectorItem(Req request) {
+    public Type getPreviousData() {
+        return this.previousData;
+    }
+
+    public Type getResultOfComparisonBetweenCurrAndPrevData(Type currentData) {
+        this.previousData = getPreviousDataFromProjectRepository(currentData);
+        if (this.previousData == null) {
+            return null;
+        }
+        Map<String, Integer> difference = getDifferenceBetweenTheCurrAndPrevData(currentData, this.previousData);
+        return getResultOfComparison(difference);
+    }
+
+    public CollectorItem getCollectorItem(Req request) {
         CollectorItem item = null;
         Component component = getComponent(getRequestId(request));
         List<CollectorItem> items = component.getCollectorItems().get(getCollectorType());
@@ -34,12 +38,51 @@ public abstract class CodeSecurityService<Type, Req>{
         return item;
     }
 
-    protected String getReportURL(String projectUrl, String path, String projectId) {
-        StringBuilder sb = new StringBuilder(projectUrl);
-        if(!projectUrl.endsWith("/")) {
-            sb.append("/");
+    protected Type getPreviousDataFromProjectRepository(Type result) {
+        String projectName = getProjectNameFromObject(result);
+        List<Type> dataByCurrentProjectName = getDataByCurrentProjectName(projectName);
+        dataByCurrentProjectName.removeIf(p -> (getProjectTimestamp(p).equals(getProjectTimestamp(result))));
+        if (dataByCurrentProjectName.isEmpty()) {
+            return null;
         }
-        sb.append(path).append(projectId);
-        return sb.toString();
+        return Collections.max(dataByCurrentProjectName, Comparator.comparing(object -> getProjectTimestamp(object)));
+    }
+
+    protected Type previousData = null;
+
+    protected abstract ObjectId getRequestId(Req request);
+
+    protected abstract CollectorType getCollectorType();
+
+    protected abstract Component getComponent(ObjectId id);
+
+    protected abstract Integer getMetricField(Type object, String metricField);
+
+    protected abstract String getAFirstFieldFromMap();
+
+    protected abstract String getASecondFiledFromMap();
+
+    protected abstract String getAThirdFieldFromMap();
+
+    protected abstract List<Type> getDataByCurrentProjectName(String projectName);
+
+    protected abstract String getProjectNameFromObject(Type object);
+
+    protected abstract Long getProjectTimestamp(Type object);
+
+    protected abstract Type getResultOfComparison(Map<String, Integer> difference);
+
+    protected Map<String, Integer> getDifferenceBetweenTheCurrAndPrevData(Type current, Type previous) {
+        Map<String, Integer> difference = new HashMap<>();
+        difference.put(getAFirstFieldFromMap(), getDifferenceOfMetrics(current, previous, getAFirstFieldFromMap()));
+        difference.put(getASecondFiledFromMap(), getDifferenceOfMetrics(current, previous, getASecondFiledFromMap()));
+        difference.put(getAThirdFieldFromMap(), getDifferenceOfMetrics(current, previous, getAThirdFieldFromMap()));
+        return difference;
+    }
+
+    protected Integer getDifferenceOfMetrics(Type current, Type previous, String metricField) {
+        int firstValue = getMetricField(previous, metricField);
+        int secondValue = getMetricField(current, metricField);
+        return (firstValue - secondValue);
     }
 }

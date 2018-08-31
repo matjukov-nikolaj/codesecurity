@@ -13,7 +13,7 @@ import java.util.Date;
 import java.util.Locale;
 
 public abstract class DefaultCodeSecurityClient<T, P> {
-    private static final Log LOG = LogFactory.getLog(DefaultCodeSecurityClient.class);
+    protected static final Log LOG = LogFactory.getLog(DefaultCodeSecurityClient.class);
 
     private static final String PROTOCOL_SPLITTER = "://";
 
